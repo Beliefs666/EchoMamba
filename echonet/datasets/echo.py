@@ -111,15 +111,6 @@ class Echo(torchvision.datasets.VisionDataset):
             self.fnames = [fn if os.path.splitext(fn)[1] != "" else fn + ".avi" for fn in self.fnames]  # Assume avi if no suffix
             self.outcome = data.values.tolist()
 
-            # Check that files are present
-            # TODO: should just make this work on nexted dir
-            # missing = set(self.fnames) - set(os.listdir(os.path.join(self.root, "Videos")))
-            # if len(missing) != 0:
-            #     print("{} videos could not be found in {}:".format(len(missing), os.path.join(self.root, "Videos")))
-            #     for f in sorted(missing):
-            #         print("\t", f)
-            #     raise FileNotFoundError(os.path.join(self.root, "Videos", sorted(missing)[0]))
-
             # Load traces
             if True:  # TODO: should only load if needed
                 self.frames = collections.defaultdict(list)
@@ -155,10 +146,7 @@ class Echo(torchvision.datasets.VisionDataset):
                     for frame in self.frames[filename]:
                         self.trace[filename][frame] = np.array(self.trace[filename][frame])
 
-            # A small number of videos are missing traces; remove these videos
-            # keep = [len(self.frames[f]) >= 2 for f in self.fnames]
-            # self.fnames = [f for (f, k) in zip(self.fnames, keep) if k]
-            # self.outcome = [f for (f, k) in zip(self.outcome, keep) if k]
+
 
     def __getitem__(self, index):
         # Find filename of video
@@ -212,16 +200,11 @@ class Echo(torchvision.datasets.VisionDataset):
             # Pad video with frames filled with zeros if too short
             # 0 represents the mean color (dark grey), since this is after normalization
             video = np.concatenate((video, np.zeros((c, length * self.period - f, h, w), video.dtype)), axis=1)
-            c, f, h, w = video.shape  # pylint: disable=E0633
+            c, f, h, w = video.shape  
 
         if self.clips == "all":
             # Take all possible clips of desired length
             start = np.arange(f - (length - 1) * self.period)
-            if start.size > self.max_clips:
-                # TODO: this messes up the clip number in test-time aug
-                # Might need to have a clip index target
-                start = np.random.choice(start, self.max_clips, replace=False)
-                start.sort()
         else:
             # Take random clips from video
             start = np.random.choice(f - (length - 1) * self.period, self.clips)
@@ -230,62 +213,40 @@ class Echo(torchvision.datasets.VisionDataset):
         target = []
         for t in self.target_type:
             key = self.fnames[index]
+
             if t == "Filename":
                 target.append(self.fnames[index])
             elif t == "LargeIndex":
-                # Traces are sorted by cross-sectional area
-                # Largest (diastolic) frame is last
-                target.append(np.int(self.frames[key][-1]))
+                target.append(int(self.frames[key][-1]))
             elif t == "SmallIndex":
-                # Largest (diastolic) frame is first
-                target.append(np.int(self.frames[key][0]))
-            elif t in ["LargeFrame", "SmallFrame"]:
-                if t == "LargeFrame":
-                    frame = self.frames[key][-1]
-                else:
-                    frame = self.frames[key][0]
-
-                if frame is None or frame >= video.shape[1]:
-                    target.append(np.full((video.shape[0], video.shape[2], video.shape[3]), math.nan, video.dtype))
-                else:
-                    target.append(video[:, frame, :, :])
+                target.append(int(self.frames[key][0]))
+            elif t == "LargeFrame":
+                target.append(video[:, self.frames[key][-1], :, :])
+            elif t == "SmallFrame":
+                target.append(video[:, self.frames[key][0], :, :])
             elif t in ["LargeTrace", "SmallTrace"]:
                 if t == "LargeTrace":
-                    frame = self.frames[key][-1]
+                    n = self.trace[key][self.frames[key][-1]]
                 else:
-                    frame = self.frames[key][0]
-                if frame is None or frame >= video.shape[1]:
-                    mask = np.full((video.shape[2], video.shape[3]), math.nan, np.float32)
-                else:
-                    t = self.trace[key][frame]
+                    n = self.trace[key][self.frames[key][0]]
+                x1, y1, x2, y2 = n[:, 0], n[:, 1], n[:, 2], n[:, 3]
+                x = np.concatenate((x1[1:], np.flip(x2[1:])))
+                y = np.concatenate((y1[1:], np.flip(y2[1:])))
 
-                    if t.shape[1] == 4:
-                        x1, y1, x2, y2 = t[:, 0], t[:, 1], t[:, 2], t[:, 3]
-                        x = np.concatenate((x1[1:], np.flip(x2[1:])))
-                        y = np.concatenate((y1[1:], np.flip(y2[1:])))
-                    else:
-                        assert t.shape[1] == 2
-                        x, y = t[:, 0], t[:, 1]
+                pts = np.array([np.rint(np.column_stack((x, y))).astype(np.int32)])
+                mask = np.zeros((video.shape[2], video.shape[3]), np.uint8)
 
-                    r, c = skimage.draw.polygon(np.rint(y).astype(int), np.rint(x).astype(int), (video.shape[2], video.shape[3]))
-                    mask = np.zeros((video.shape[2], video.shape[3]), np.float32)
-                    mask[r, c] = 1
-                    # pts = np.array([np.rint(np.column_stack((x, y))).astype(np.int32)])
-                    # mask = np.zeros((video.shape[2], video.shape[3]), np.uint8)
-                    #
-                    # # 使用 cv2.fillPoly 完整填充多边形
-                    # cv2.fillPoly(mask, pts, 1)
-                    # mask = binary_fill_holes(mask).astype(np.float32)
-
+                cv2.fillPoly(mask, pts, 1)
+                mask = mask.astype(np.float32)
 
 
                 target.append(mask)
+
             else:
                 if self.split == "CLINICAL_TEST" or self.split == "EXTERNAL_TEST":
                     target.append(np.float32(0))
                 else:
-                    # target.append(np.float32(self.outcome[index][self.header.index(t)]))  # TODO: is floating necessary
-                    target.append(self.outcome[index][self.header.index(t)])
+                    target.append(np.float32(self.outcome[index][self.header.index(t)]))
 
         if target != []:
             target = tuple(target) if len(target) > 1 else target[0]
