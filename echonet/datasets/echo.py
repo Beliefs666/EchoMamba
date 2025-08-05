@@ -267,15 +267,12 @@ class Echo(torchvision.datasets.VisionDataset):
                         assert t.shape[1] == 2
                         x, y = t[:, 0], t[:, 1]
 
-                    r, c = skimage.draw.polygon(np.rint(y).astype(int), np.rint(x).astype(int), (video.shape[2], video.shape[3]))
-                    mask = np.zeros((video.shape[2], video.shape[3]), np.float32)
-                    mask[r, c] = 1
-                    # pts = np.array([np.rint(np.column_stack((x, y))).astype(np.int32)])
-                    # mask = np.zeros((video.shape[2], video.shape[3]), np.uint8)
-                    #
-                    # # 使用 cv2.fillPoly 完整填充多边形
-                    # cv2.fillPoly(mask, pts, 1)
-                    # mask = binary_fill_holes(mask).astype(np.float32)
+
+
+                    pts = np.array([np.rint(np.column_stack((x, y))).astype(np.int32)])
+                    mask = np.zeros((video.shape[2], video.shape[3]), np.uint8)
+                    cv2.fillPoly(mask, pts, 1)
+                    mask = binary_fill_holes(mask).astype(np.float32)
 
 
 

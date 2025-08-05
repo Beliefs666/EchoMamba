@@ -415,7 +415,7 @@ class AFE_Layer(nn.Module):
         offsets = self.offsets_conv(x)
         x1 = self.deform_conv(x, offsets)
         x1 = self.norm_layer(x1)
-        x2 = self.depthwise2(x)
+        x2 = self.depthwise1(x)
         x4 =  self.pointwise( x2 + x)
         x4 = self.silu(x4)
         out = x1 + x4

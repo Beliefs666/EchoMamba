@@ -154,7 +154,7 @@ def run(
 
 
 
-    print('#----------Preparing dataset----------#')
+    print('#----------Preparing echenet dataset----------#')
     train_dataset = echonet.datasets.Echo(root=data_dir, split="train", **kwargs)
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                 batch_size=batch_size,
@@ -176,6 +176,44 @@ def run(
                                               shuffle=False,
                                               pin_memory=(device.type == "cuda"),
                                               num_workers=num_workers)
+
+    print('#----------Preparing camus dataset----------#')
+    # train_dataset = echonet.datasets.camus.HEART_datasets(path_Data=data_dir, config=config, train=True, val=False)
+    # train_loader = torch.utils.data.DataLoader(train_dataset,
+    #                                            batch_size=batch_size,
+    #                                            # batch_size=config.batch_size,
+    #                                            shuffle=True,
+    #                                            pin_memory=True,
+    #                                            num_workers=num_workers)
+    # val_dataset = echonet.datasets.camus.HEART_datasets(path_Data=data_dir, config=config, train=False, val=True)
+    # val_loader = torch.utils.data.DataLoader(val_dataset,
+    #                                          batch_size=batch_size,
+    #                                          shuffle=False,
+    #                                          pin_memory=True,
+    #                                          num_workers=num_workers,
+    #                                          drop_last=True)
+    # # 用于测试评估
+    # test_dataset = echonet.datasets.camus.HEART_datasets(path_Data=data_dir, config=config, train=False, val=False)
+    # test_loader = torch.utils.data.DataLoader(test_dataset,
+    #                                           batch_size=1, num_workers=num_workers, shuffle=False,
+    #                                           pin_memory=(device.type == "cuda"))
+
+    print('#----------Preparing hmcqu dataset----------#')
+
+    # train_dataset = echonet.datasets.hmcqu.get_hmcqu_dataset(
+    #     [ f"{data_dir}/train.csv"  ],
+    #     base_path=f"{data_dir}/",
+    #     file_name="records.h5"
+    # )
+    # test_dataset = echonet.datasets.hmcqu.get_hmcqu_dataset(
+    #      [ f"{data_dir}/test.csv"  ],
+    #     base_path=f"{data_dir}/",
+    #     file_name="records.h5"
+    # )
+    #
+    # train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    # test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False)
+
 
     # Run training and testing loops
     with open(os.path.join(outputs, "log.csv"), "a") as f:

@@ -1,11 +1,10 @@
 <h1>Echo-Mamba: Mamba Network for Left Ventricle Segmentation in Echocardiography<h1>
-------------------------------------------------------------------------------
+----------------------------------------
 Jieqiong Ding</br>
 Northeast Forestry University,Heilongjiang, China
 
 
-For more details, see the accompanying paper,
-> [**Echo-Mamba: Mamba Network for Left Ventricle Segmentation in Echocardiography**]<br/>
+
   
 Dataset
 -------
@@ -77,7 +76,8 @@ Train the EchoMamba
     echonet segmentation --data_dir /your dir/ 
 
 
-
+For more details, see the accompanying paper,
+> []<br/>
 
 ## Citation
 If you find this repository helpful, please consider citing: </br>

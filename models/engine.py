@@ -133,8 +133,6 @@ def val_one_epoch(val_loader,
         sensitivity = float(TP) / float(TP + FN) if float(TP + FN) != 0 else 0
         specificity = float(TN) / float(TN + FP) if float(TN + FP) != 0 else 0
 
-        hd95_overall = medpy_hd95(y_pre, y_true)
-        assd_overall = medpy_assd(y_pre, y_true)
 
         hd95_average = np.mean(hd95_values)
         hd95_std = np.std(hd95_values)
@@ -144,8 +142,8 @@ def val_one_epoch(val_loader,
 
 
         log_info = (f'test of best model, loss: {np.mean(loss_list):.4f},miou: {miou}, f1_or_dsc: {f1_or_dsc}, '
-                    f'hd95_overall:{hd95_overall},hd95_average:{hd95_average},hd95_std:{hd95_std},'
-                    f'assd_overall:{assd_overall}, assd_average:{assd_average},assd_std:{assd_std},'
+                    f'hd95_average:{hd95_average},hd95_std:{hd95_std},'
+                    f'assd_average:{assd_average},assd_std:{assd_std},'
                     f'accuracy:{accuracy}, sensitivity:{sensitivity}, specificity:{specificity},      confusion_matrix:{confusion}')
         print(log_info)
         logger.info(log_info)
@@ -178,8 +176,8 @@ def val_one_epoch(val_loader,
         assd_std_large = np.std(assd_values)
 
         log_info = (f'val large , miou: {miou_large}, f1_or_dsc: {f1_or_dsc_large}, '
-                    f'hd95_overall:{hd95_overall_large},hd95_average:{hd95_average_large},'
-                    f'med_assd:{assd_overall_large}, average_assd:{assd_average_large},confusion_matrix: {confusion}')
+                    f'hd95_average:{hd95_average_large},'
+                    f'average_assd:{assd_average_large},confusion_matrix: {confusion}')
         print(log_info)
         logger.info(log_info)
 
